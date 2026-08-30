@@ -160,3 +160,22 @@
 .dot--mastered {
     background: var(--color-success);
 }
+
+@media (max-width: 40rem) {
+    .grid {
+        gap: 0.125rem;
+    }
+
+    .gridRow {
+        gap: 0.125rem;
+    }
+
+    .cell {
+        min-height: 4rem;
+        padding: var(--space-2xs) 0.25rem;
+    }
+
+    .emptyCell {
+        min-height: 4rem;
+    }
+}

@@ -84,3 +84,28 @@
     color: var(--color-fg-muted);
     margin-top: 0.1rem;
 }
+
+@media (max-width: 40rem) {
+    .table {
+        min-width: 0;
+    }
+
+    .table th:not(.corner):not(.rowHead),
+    .corner,
+    .rowHead {
+        padding: var(--space-2xs) var(--space-xs);
+    }
+
+    .rowHead {
+        min-width: auto;
+    }
+
+    .cell,
+    .empty {
+        padding: var(--space-2xs);
+    }
+
+    .glyph {
+        font-size: var(--font-size-lg);
+    }
+}

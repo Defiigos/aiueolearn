@@ -1,10 +1,23 @@
 .group {
-    display: inline-flex;
+    display: flex;
+    flex-wrap: wrap;
     gap: var(--space-2xs);
     padding: var(--space-2xs);
     background: var(--color-bg);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
+}
+
+@media (max-width: 40rem) {
+    .group {
+        width: 100%;
+    }
+
+    .segment {
+        flex: 1 1 auto;
+        text-align: center;
+        white-space: nowrap;
+    }
 }
 
 .segment {
