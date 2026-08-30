@@ -1,0 +1,52 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.card {
+    padding: var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.sectionTitle {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-fg);
+}
+
+.repetitionRow {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    max-width: 16rem;
+}
+
+.rowHint {
+    font-size: var(--font-size-sm);
+    color: var(--color-fg-faint);
+    white-space: nowrap;
+}
+
+.footer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+}
+
+.footerSpacer {
+    flex: 1;
+}
+
+.footHint {
+    font-size: var(--font-size-sm);
+    color: var(--color-fg-faint);
+}

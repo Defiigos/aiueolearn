@@ -1,0 +1,34 @@
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-lg);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+    width: 100%;
+    max-width: 40rem;
+}
+
+.counter {
+    font-size: var(--font-size-sm);
+    color: var(--color-fg-muted);
+    font-weight: var(--font-weight-medium);
+    white-space: nowrap;
+}
+
+.progress {
+    flex: 1;
+}
+
+.card {
+    width: 100%;
+    max-width: 40rem;
+    min-height: 22rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

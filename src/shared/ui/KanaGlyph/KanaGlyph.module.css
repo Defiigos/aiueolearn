@@ -1,0 +1,23 @@
+.sm {
+    font-family: var(--font-family-kana);
+    font-size: var(--font-size-lg);
+    line-height: 1;
+}
+
+.md {
+    font-family: var(--font-family-kana);
+    font-size: var(--font-size-display);
+    line-height: 1.1;
+}
+
+.lg {
+    font-family: var(--font-family-kana);
+    font-size: 6.5rem;
+    line-height: 1;
+}
+
+.xl {
+    font-family: var(--font-family-kana);
+    font-size: 8.5rem;
+    line-height: 1;
+}

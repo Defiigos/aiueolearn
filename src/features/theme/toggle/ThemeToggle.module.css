@@ -1,0 +1,23 @@
+.toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--size-control);
+    height: var(--size-control);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    background: var(--color-bg-elevated);
+    color: var(--color-fg);
+    transition: background-color 150ms ease, border-color 150ms ease,
+    transform 150ms ease;
+
+    &:hover {
+        border-color: var(--color-border-strong);
+        transform: translateY(-1px);
+    }
+}
+
+.icon {
+    font-size: var(--font-size-lg);
+    line-height: 1;
+}

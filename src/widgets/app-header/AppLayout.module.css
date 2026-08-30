@@ -1,0 +1,74 @@
+.shell {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    height: var(--size-header);
+    background: var(--color-bg-elevated);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.inner {
+    height: 100%;
+    max-width: var(--size-max-width);
+    margin: 0 auto;
+    padding: 0 var(--space-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xl);
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-lg);
+}
+
+.brandMark {
+    font-family: var(--font-family-kana);
+    color: var(--color-primary);
+}
+
+.brandName {
+    color: var(--color-fg);
+}
+
+.nav {
+    display: flex;
+    gap: var(--space-md);
+    flex: 1;
+}
+
+.link {
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--radius-md);
+    color: var(--color-fg-muted);
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-md);
+    transition: background-color 150ms ease, color 150ms ease;
+
+    &:hover {
+        color: var(--color-fg);
+    }
+}
+
+.active {
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    font-weight: var(--font-weight-semibold);
+}
+
+.main {
+    flex: 1;
+    width: 100%;
+    max-width: var(--size-max-width);
+    margin: 0 auto;
+    padding: var(--space-xl) var(--space-lg) var(--space-2xl);
+}
