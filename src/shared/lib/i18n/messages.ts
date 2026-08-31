@@ -9,6 +9,7 @@ import type {Locale} from './types';
  */
 const en = {
     // —— Шапка / навигация ——
+    'app.title': 'AIUEO Learn — Hiragana & Katakana',
     'nav.trainer': 'Trainer',
     'nav.reference': 'Alphabets',
     'nav.aria': 'Main navigation',
@@ -121,6 +122,8 @@ const ru: Record<MessageKey, string> = {
     'nav.trainer': 'Тренажёр',
     'nav.reference': 'Азбуки',
     'nav.aria': 'Основная навигация',
+
+    'app.title': 'AIUEO Learn — хирагана и катакана',
 
     'theme.toLight': 'Включить светлую тему',
     'theme.toDark': 'Включить тёмную тему',

@@ -11,12 +11,13 @@ interface I18nProviderProps {
     readonly children: ReactNode;
 }
 
-/** Провайдер локализации: применяет `lang` к документу и сохраняет выбор языка. */
+/** Провайдер локализации: применяет `lang` и заголовок к документу, сохраняет выбор языка. */
 export function I18nProvider({children}: I18nProviderProps): ReactNode {
     const [locale, setLocale] = useState<Locale>(getInitialLocale);
 
     useEffect(() => {
         document.documentElement.lang = locale;
+        document.title = translate(locale, 'app.title');
         window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
     }, [locale]);
 
