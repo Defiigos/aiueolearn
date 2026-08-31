@@ -1,5 +1,5 @@
 import type {ReactNode} from 'react';
-import {createBrowserRouter, RouterProvider} from 'react-router-dom';
+import {createBrowserRouter, Navigate, RouterProvider} from 'react-router-dom';
 import {I18nProvider} from '@/shared/lib/i18n';
 import {ThemeProvider} from '@/features/theme';
 import {ProgressProvider} from '@/entities/progress';
@@ -13,7 +13,10 @@ const router = createBrowserRouter([
         element: <AppLayout/>,
         children: [
             {index: true, element: <TrainerPage/>},
+            {path: 'session', element: <TrainerPage/>},
+            {path: 'results', element: <TrainerPage/>},
             {path: 'reference', element: <ReferencePage/>},
+            {path: '*', element: <Navigate to="/" replace/>},
         ],
     },
 ]);

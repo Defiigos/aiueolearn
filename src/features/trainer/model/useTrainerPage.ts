@@ -1,9 +1,15 @@
 import {useCallback, useState} from 'react';
+import {useLocation, useNavigate} from 'react-router-dom';
 import type {KanaSymbol} from '@/entities/kana';
 import type {QuestionResult, TrainingMode} from './types';
 
 /** Стадии жизненного цикла страницы тренажёра. */
 export type TrainerStage = 'setup' | 'session' | 'results';
+
+/** URL-адреса стадий тренажёра. */
+const ROUTE_SETUP = '/';
+const ROUTE_SESSION = '/session';
+const ROUTE_RESULTS = '/results';
 
 /** Состояние активной сессии, закреплённое на момент её старта. */
 export interface ActiveSessionState {
@@ -25,29 +31,36 @@ export function useTrainerPage(): {
     readonly restartSession: () => void;
     readonly returnToSetup: () => void;
 } {
-    const [stage, setStage] = useState<TrainerStage>('setup');
+    const navigate = useNavigate();
+    const {pathname} = useLocation();
+
     const [session, setSession] = useState<ActiveSessionState>();
     const [results, setResults] = useState<readonly QuestionResult[]>([]);
+
+    const stage: TrainerStage =
+        pathname === ROUTE_SESSION ? 'session'
+        : pathname === ROUTE_RESULTS ? 'results'
+        : 'setup';
 
     const startSession = useCallback((next: ActiveSessionState) => {
         setSession(next);
         setResults([]);
-        setStage('session');
-    }, []);
+        navigate(ROUTE_SESSION);
+    }, [navigate]);
 
     const finishSession = useCallback((completedResults: readonly QuestionResult[]) => {
         setResults(completedResults);
-        setStage('results');
-    }, []);
+        navigate(ROUTE_RESULTS);
+    }, [navigate]);
 
     const restartSession = useCallback(() => {
         setResults([]);
-        setStage('session');
-    }, []);
+        navigate(ROUTE_SESSION);
+    }, [navigate]);
 
     const returnToSetup = useCallback(() => {
-        setStage('setup');
-    }, []);
+        navigate(ROUTE_SETUP);
+    }, [navigate]);
 
     return {stage, session, results, startSession, finishSession, restartSession, returnToSetup};
 }
