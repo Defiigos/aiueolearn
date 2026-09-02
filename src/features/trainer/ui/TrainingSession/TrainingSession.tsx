@@ -3,9 +3,11 @@ import {useMemo} from 'react';
 import type {KanaSymbol} from '@/entities/kana';
 import {findKanaById} from '@/entities/kana';
 import {useI18n} from '@/shared/lib/i18n';
+import {cx} from '@/shared/lib/cx';
 import {Card, ProgressBar} from '@/shared/ui';
 import {useTrainingSession} from '@/features/trainer';
-import type {QuestionResult, TrainingMode} from '../../model/types';
+import {formatDuration} from '../../model/time';
+import type {AnswerTimeLimit, QuestionResult, TrainingMode} from '../../model/types';
 import {ChoiceQuestion} from '../ChoiceQuestion/ChoiceQuestion';
 import {QuestionFeedback} from '../QuestionFeedback/QuestionFeedback';
 import {TypingQuestion} from '../TypingQuestion/TypingQuestion';
@@ -15,10 +17,13 @@ interface TrainingSessionProps {
     readonly symbols: readonly KanaSymbol[];
     readonly repetitions: number;
     readonly mode: TrainingMode;
+    readonly timeLimit: AnswerTimeLimit;
     readonly onFinish: (results: readonly QuestionResult[]) => void;
     /** Учитывает каждый ответ пользователя по знаку (для прогресса). */
     readonly onAnswer?: (symbolId: string, correct: boolean) => void;
 }
+
+const URGENT_SECONDS = 10;
 
 /**
  * Активный режим тренировки. Хук `useTrainingSession` здесь монтируется
@@ -28,15 +33,21 @@ export function TrainingSession({
                                     symbols,
                                     repetitions,
                                     mode,
+                                    timeLimit,
                                     onFinish,
                                     onAnswer,
                                 }: TrainingSessionProps): ReactNode {
-    const {index, total, question, answered, results, submitTyping, submitChoice, next} =
-        useTrainingSession(symbols, repetitions, mode, onFinish);
+    const {index, total, question, answered, results, elapsedMs, limitSeconds, submitTyping, submitChoice, next} =
+        useTrainingSession(symbols, repetitions, mode, timeLimit, onFinish);
     const {t} = useI18n();
 
     const lastResult = results[results.length - 1];
     const isLast = index + 1 >= total;
+
+    const remainingSeconds = limitSeconds == null
+        ? undefined
+        : Math.max(0, limitSeconds - elapsedMs / 1000);
+    const isUrgent = remainingSeconds != null && remainingSeconds <= URGENT_SECONDS;
 
     // Отображаемые строки ответа зависят от типа вопроса.
     const feedback = useMemo(() => {
@@ -62,6 +73,17 @@ export function TrainingSession({
         <span className={styles.counter}>
           {t('session.step', {current: index + 1, total})}
         </span>
+                {limitSeconds != null && !answered && (
+                    <span
+                        className={cx(styles.timer, isUrgent && styles.timerUrgent)}
+                        role="timer"
+                        aria-live="off"
+                    >
+            {t('session.timeLeft', {
+                time: formatDuration(remainingSeconds ?? 0),
+            })}
+          </span>
+                )}
                 <ProgressBar className={styles.progress} value={index + (answered ? 1 : 0)} max={total}/>
             </header>
 
@@ -89,7 +111,8 @@ export function TrainingSession({
                         )}
                         {answered && lastResult && feedback && (
                             <QuestionFeedback
-                                isCorrect={lastResult.status === 'correct'}
+                                status={lastResult.status}
+                                timeSeconds={lastResult.durationMs / 1000}
                                 submittedDisplay={feedback.submittedDisplay}
                                 correctDisplay={feedback.correctDisplay}
                                 onNext={next}

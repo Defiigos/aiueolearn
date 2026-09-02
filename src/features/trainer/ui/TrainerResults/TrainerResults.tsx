@@ -1,6 +1,7 @@
 import type {ReactNode} from 'react';
 import {useI18n} from '@/shared/lib/i18n';
 import {Button, Card} from '@/shared/ui';
+import {formatDuration} from '../../model/time';
 import type {QuestionResult} from '../../model/types';
 import styles from './TrainerResults.module.css';
 
@@ -22,6 +23,9 @@ export function TrainerResults({
     const wrong = total - correct;
     const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
     const mistakes = results.filter((result) => result.status === 'incorrect');
+    const timeouts = results.filter((result) => result.status === 'timeout').length;
+    const totalSeconds = total > 0 ? results.reduce((sum, result) => sum + result.durationMs, 0) / 1000 : 0;
+    const avgSeconds = total > 0 ? totalSeconds / total : 0;
 
     return (
         <div className={styles.wrapper}>
@@ -41,6 +45,18 @@ export function TrainerResults({
                     <div className={styles.stat}>
                         <dt className={styles.statLabel}>{t('results.accuracy')}</dt>
                         <dd className={styles.statValue}>{accuracy}%</dd>
+                    </div>
+                    <div className={styles.stat}>
+                        <dt className={styles.statLabel}>{t('results.totalTime')}</dt>
+                        <dd className={styles.statValue}>{formatDuration(totalSeconds)}</dd>
+                    </div>
+                    <div className={styles.stat}>
+                        <dt className={styles.statLabel}>{t('results.avgTime')}</dt>
+                        <dd className={styles.statValue}>{formatDuration(avgSeconds)}</dd>
+                    </div>
+                    <div className={styles.stat}>
+                        <dt className={styles.statLabel}>{t('results.timeout')}</dt>
+                        <dd className={styles.statValue}>{timeouts}</dd>
                     </div>
                 </dl>
 

@@ -24,6 +24,18 @@
     flex: 1;
 }
 
+.timer {
+    font-size: var(--font-size-sm);
+    color: var(--color-fg-muted);
+    font-weight: var(--font-weight-semibold);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.timerUrgent {
+    color: var(--color-danger);
+}
+
 .card {
     width: 100%;
     max-width: 40rem;

@@ -28,6 +28,13 @@ const en = {
     'mode.choice': 'Pick a kana',
     'mode.mixed': 'Mixed',
 
+    // —— Лимит времени на ответ ——
+    'timeLimit.off': 'No limit',
+    'timeLimit.easy': 'Easy · 30 sec',
+    'timeLimit.medium': 'Medium · 10 sec',
+    'timeLimit.hard': 'Hard · 2 sec',
+    'timeLimit.custom': 'Custom',
+
     // —— Наборы знаков ——
     'set.base': 'Basic',
     'set.dakuon': 'Voiced',
@@ -42,6 +49,10 @@ const en = {
     'setup.modeAria': 'Choose the training mode',
     'setup.repetitionsAria': 'Number of repetitions',
     'setup.repetitionsHint': 'from {min} to {max}',
+    'setup.timeLimit': 'Time per answer',
+    'setup.timeLimitAria': 'Choose the answer time limit',
+    'setup.timeLimitCustomAria': 'Custom time limit in seconds',
+    'setup.timeLimitHint': 'from {min} to {max} sec',
     'setup.start': 'Start training',
     'setup.signHint': 'Select at least one kana',
     'setup.resetConfirm': 'Reset all learning progress for every kana?',
@@ -63,6 +74,8 @@ const en = {
     // —— Обратная связь после ответа ——
     'feedback.correct': 'Correct!',
     'feedback.wrong': 'Incorrect',
+    'feedback.timeout': 'Time is up',
+    'feedback.timeSpent': 'Time: {time}',
     'feedback.detail': 'Your answer: {submitted} · Correct: {correct}',
     'feedback.next': 'Next kana',
     'feedback.finish': 'Finish',
@@ -74,6 +87,7 @@ const en = {
 
     // —— Ход тренировки ——
     'session.step': 'Step {current} of {total}',
+    'session.timeLeft': 'Time left: {time}',
 
     // —— Таблица выбора знаков ——
     'symbols.all': 'Select all kana',
@@ -90,6 +104,9 @@ const en = {
     'results.correct': 'Correct',
     'results.wrong': 'Mistakes',
     'results.accuracy': 'Accuracy',
+    'results.totalTime': 'Total time',
+    'results.avgTime': 'Avg per kana',
+    'results.timeout': 'Timeouts',
     'results.review': 'Worth reviewing',
     'results.trainAgain': 'Train again',
     'results.toSettings': 'Back to settings',
@@ -136,6 +153,12 @@ const ru: Record<MessageKey, string> = {
     'mode.choice': 'Выбрать знак',
     'mode.mixed': 'Смешанный',
 
+    'timeLimit.off': 'Без лимита',
+    'timeLimit.easy': 'Легко · 30 сек',
+    'timeLimit.medium': 'Средне · 10 сек',
+    'timeLimit.hard': 'Сложно · 2 сек',
+    'timeLimit.custom': 'Своё',
+
     'set.base': 'Базовые',
     'set.dakuon': 'Озвончённые',
     'set.yoon': 'Ёон',
@@ -148,6 +171,10 @@ const ru: Record<MessageKey, string> = {
     'setup.modeAria': 'Выбор режима тренировки',
     'setup.repetitionsAria': 'Количество повторений',
     'setup.repetitionsHint': 'от {min} до {max}',
+    'setup.timeLimit': 'Время на ответ',
+    'setup.timeLimitAria': 'Выбор лимита времени на ответ',
+    'setup.timeLimitCustomAria': 'Свой лимит времени, в секундах',
+    'setup.timeLimitHint': 'от {min} до {max} сек',
     'setup.start': 'Начать тренировку',
     'setup.signHint': 'Выберите хотя бы один знак',
     'setup.resetConfirm': 'Сбросить весь прогресс изучения по всем знакам?',
@@ -165,6 +192,8 @@ const ru: Record<MessageKey, string> = {
 
     'feedback.correct': 'Верно!',
     'feedback.wrong': 'Неверно',
+    'feedback.timeout': 'Время вышло',
+    'feedback.timeSpent': 'Время: {time}',
     'feedback.detail': 'Ваш ответ: {submitted} · Правильно: {correct}',
     'feedback.next': 'Следующий знак',
     'feedback.finish': 'Завершить',
@@ -174,6 +203,7 @@ const ru: Record<MessageKey, string> = {
     'typing.submit': 'Ответить',
 
     'session.step': 'Шаг {current} из {total}',
+    'session.timeLeft': 'Осталось: {time}',
 
     'symbols.all': 'Выбрать все знаки',
     'symbols.column': 'Выбрать всю колонку',
@@ -188,6 +218,9 @@ const ru: Record<MessageKey, string> = {
     'results.correct': 'Правильно',
     'results.wrong': 'Ошибки',
     'results.accuracy': 'Точность',
+    'results.totalTime': 'Общее время',
+    'results.avgTime': 'Среднее на знак',
+    'results.timeout': 'Тайм-ауты',
     'results.review': 'Стоит повторить',
     'results.trainAgain': 'Тренироваться ещё',
     'results.toSettings': 'В настройки',

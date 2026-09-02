@@ -1,10 +1,13 @@
-import {useCallback, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import type {KanaAlphabet, KanaColumn, KanaRow, KanaSet, KanaSymbol} from '@/entities/kana';
 import {getAllKanaByAlphabets, getKanaByAlphabetsAndSet, getKanaBySet,} from '@/entities/kana';
 import {generateQuestions} from './generateQuestions';
+import {limitToSeconds} from './time';
 import {
     type AnswerStatus,
+    type AnswerTimeLimit,
     DEFAULT_REPETITIONS,
+    DEFAULT_TIME_LIMIT,
     type QuestionResult,
     type TrainingMode,
     type TrainingQuestion,
@@ -18,6 +21,7 @@ export interface TrainerDraft {
     readonly symbolIds: ReadonlySet<string>;
     readonly repetitions: number;
     readonly mode: TrainingMode;
+    readonly timeLimit: AnswerTimeLimit;
 }
 
 /** Строит новый Set идентификаторов, отметив/сняв переданный список. */
@@ -47,6 +51,7 @@ export function useTrainerDraft(): {
     readonly setSet: (set: KanaSet) => void;
     readonly setMode: (mode: TrainingMode) => void;
     readonly setRepetitions: (repetitions: number) => void;
+    readonly setTimeLimit: (limit: AnswerTimeLimit) => void;
     readonly toggleSymbol: (id: string) => void;
     /** Отметить/снять все знаки набора для выбранных азбук. */
     readonly setAllSymbols: (alphabet: KanaAlphabet, selected: boolean) => void;
@@ -66,6 +71,7 @@ export function useTrainerDraft(): {
     });
     const [repetitions, setRepetitionsState] = useState<number>(DEFAULT_REPETITIONS);
     const [mode, setModeState] = useState<TrainingMode>('typing');
+    const [timeLimit, setTimeLimitState] = useState<AnswerTimeLimit>(DEFAULT_TIME_LIMIT);
 
     // При смене азбуки по умолчанию отмечаем весь видимый набор новой комбинации.
     const setAlphabets = useCallback(
@@ -82,6 +88,7 @@ export function useTrainerDraft(): {
 
     const setMode = useCallback((next: TrainingMode) => setModeState(next), []);
     const setRepetitions = useCallback((next: number) => setRepetitionsState(next), []);
+    const setTimeLimit = useCallback((next: AnswerTimeLimit) => setTimeLimitState(next), []);
 
     const toggleSymbol = useCallback((id: string) => {
         setSymbolIds((current) => {
@@ -135,7 +142,7 @@ export function useTrainerDraft(): {
         [alphabets, symbolIds],
     );
 
-    const draft: TrainerDraft = {alphabets, set, symbolIds, repetitions, mode};
+    const draft: TrainerDraft = {alphabets, set, symbolIds, repetitions, mode, timeLimit};
     const canStart = selectedSymbols.length > 0;
 
     return {
@@ -144,6 +151,7 @@ export function useTrainerDraft(): {
         setSet,
         setMode,
         setRepetitions,
+        setTimeLimit,
         toggleSymbol,
         setAllSymbols,
         setRow,
@@ -159,6 +167,10 @@ export interface TrainingSessionState {
     readonly question: TrainingQuestion | undefined;
     readonly answered: boolean;
     readonly results: readonly QuestionResult[];
+    /** Прошедшее время на текущем вопросе, в миллисекундах. */
+    readonly elapsedMs: number;
+    /** Активный лимит времени на вопрос в секундах, либо `undefined`. */
+    readonly limitSeconds: number | undefined;
     readonly submitTyping: (romaji: string) => void;
     readonly submitChoice: (symbolId: string) => void;
     readonly next: () => void;
@@ -167,18 +179,28 @@ export interface TrainingSessionState {
 
 /**
  * Управляет ходом активной тренировки: текущий вопрос, проверка ответов,
- * переход к следующему вопросу и перезапуск.
+ * лимит времени на ответ, переход к следующему вопросу и перезапуск.
  */
 export function useTrainingSession(
     symbols: readonly KanaSymbol[],
     repetitions: number,
     mode: TrainingMode,
+    timeLimit: AnswerTimeLimit,
     onFinish: (results: readonly QuestionResult[]) => void,
 ): TrainingSessionState {
     const [runId, setRunId] = useState(0);
     const [index, setIndex] = useState(0);
     const [answered, setAnswered] = useState(false);
     const [results, setResults] = useState<readonly QuestionResult[]>([]);
+
+    // Зеркало `answered` для синхронной защиты от двойной записи результата
+    // (состояние обновляется асинхронно, а таймер может сработать в том же тике).
+    const answeredRef = useRef(false);
+    // Момент начала текущего вопроса (для подсчёта времени решения).
+    const startMsRef = useRef(0);
+    const [elapsedMs, setElapsedMs] = useState(0);
+
+    const limitSeconds = limitToSeconds(timeLimit);
 
     const questions = useMemo(
         () => generateQuestions(symbols, repetitions, mode),
@@ -190,16 +212,25 @@ export function useTrainingSession(
     const question = questions[index];
     const total = questions.length;
 
+    // При смене вопроса (или перезапуске) — новый отсчёт времени.
+    useEffect(() => {
+        startMsRef.current = performance.now();
+        setElapsedMs(0);
+        answeredRef.current = false;
+    }, [index, runId]);
+
     const record = useCallback(
         (status: AnswerStatus, submitted: string, correctAnswer: string): void => {
-            if (!question || answered) {
+            if (!question || answeredRef.current) {
                 return;
             }
-            const result: QuestionResult = {question, status, submitted, correctAnswer};
+            answeredRef.current = true;
+            const durationMs = Math.round(performance.now() - startMsRef.current);
+            const result: QuestionResult = {question, status, submitted, correctAnswer, durationMs};
             setResults((current) => [...current, result]);
             setAnswered(true);
         },
-        [question, answered],
+        [question],
     );
 
     const submitTyping = useCallback(
@@ -226,16 +257,38 @@ export function useTrainingSession(
         [question, record],
     );
 
+    // Тикает счётчик и при достижении лимита автоматически фиксирует тайм-аут.
+    useEffect(() => {
+        if (!question || answered || limitSeconds == null) {
+            return;
+        }
+        const limitMs = limitSeconds * 1000;
+        const timer = window.setInterval(() => {
+            const elapsed = performance.now() - startMsRef.current;
+            setElapsedMs(Math.max(0, elapsed));
+            if (elapsed >= limitMs) {
+                const correctAnswer =
+                    question.kind === 'choice'
+                        ? question.correct.romaji
+                        : question.prompt.romaji;
+                record('timeout', '', correctAnswer);
+            }
+        }, 200);
+        return () => window.clearInterval(timer);
+    }, [question, answered, limitSeconds, record]);
+
     const next = useCallback(() => {
         if (index + 1 >= total) {
             onFinish(results);
             return;
         }
+        answeredRef.current = false;
         setAnswered(false);
         setIndex((current) => current + 1);
     }, [index, total, onFinish, results]);
 
     const restart = useCallback(() => {
+        answeredRef.current = false;
         setAnswered(false);
         setIndex(0);
         setResults([]);
@@ -248,6 +301,8 @@ export function useTrainingSession(
         question,
         answered,
         results,
+        elapsedMs,
+        limitSeconds,
         submitTyping,
         submitChoice,
         next,

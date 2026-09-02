@@ -4,8 +4,21 @@ import type {KanaAlphabet, KanaColumn, KanaRow} from '@/entities/kana';
 import {ALPHABET_KEYS} from '@/entities/kana';
 import {pluralRu, useI18n} from '@/shared/lib/i18n';
 import {Button, Card, SegmentedControl, TextInput} from '@/shared/ui';
-import {MODE_KEYS, REPETITION_MAX, REPETITION_MIN, TRAINING_MODES,} from '../../model/types';
-import type {TrainerDraft} from '../../model/useTrainingSession';
+import {
+    MODE_KEYS,
+    REPETITION_MAX,
+    REPETITION_MIN,
+    TIME_LIMIT_CUSTOM_DEFAULT,
+    TIME_LIMIT_CUSTOM_MAX,
+    TIME_LIMIT_CUSTOM_MIN,
+    TIME_LIMIT_KEYS,
+    TIME_LIMIT_OPTIONS,
+    TRAINING_MODES,
+    timeLimitFromOption,
+    timeLimitToOption,
+    type AnswerTimeLimit,
+} from '../../model/types';
+import type {TrainerDraft} from '@/features/trainer';
 import {SymbolPicker} from '../SymbolPicker/SymbolPicker';
 import styles from './TrainerSetup.module.css';
 
@@ -17,6 +30,7 @@ interface TrainerSetupProps {
     readonly onSetChange: (set: TrainerDraft['set']) => void;
     readonly onModeChange: (mode: TrainerDraft['mode']) => void;
     readonly onRepetitionsChange: (value: number) => void;
+    readonly onTimeLimitChange: (limit: AnswerTimeLimit) => void;
     readonly onToggleSymbol: (id: string) => void;
     readonly onSetRow: (alphabet: KanaAlphabet, row: KanaRow, selected: boolean) => void;
     readonly onSetColumn: (alphabet: KanaAlphabet, column: KanaColumn, selected: boolean) => void;
@@ -25,7 +39,7 @@ interface TrainerSetupProps {
     readonly onResetProgress: () => void;
 }
 
-/** Экран подготовки тренировки: настройка азбук, знаков, режима и повторений. */
+/** Экран подготовки тренировки: настройка азбук, знаков, режима, повторений и лимита времени. */
 export function TrainerSetup({
                                  draft,
                                  selectedCount,
@@ -34,6 +48,7 @@ export function TrainerSetup({
                                  onSetChange,
                                  onModeChange,
                                  onRepetitionsChange,
+                                 onTimeLimitChange,
                                  onToggleSymbol,
                                  onSetRow,
                                  onSetColumn,
@@ -44,12 +59,30 @@ export function TrainerSetup({
     const {t} = useI18n();
     // Локальная строка повторений с валидацией на отправку.
     const [repetitionsText, setRepetitionsText] = useState<string>(String(draft.repetitions));
+    // Пользовательский лимит: текст поля и последнее корректное значение в секундах.
+    const [customText, setCustomText] = useState<string>(String(TIME_LIMIT_CUSTOM_DEFAULT));
+    const [customSeconds, setCustomSeconds] = useState<number>(TIME_LIMIT_CUSTOM_DEFAULT);
 
     const applyRepetitions = (text: string): void => {
         setRepetitionsText(text);
         const parsed = Number(text);
         if (Number.isInteger(parsed) && parsed >= REPETITION_MIN && parsed <= REPETITION_MAX) {
             onRepetitionsChange(parsed);
+        }
+    };
+
+    const applyCustomLimit = (text: string): void => {
+        setCustomText(text);
+        const parsed = Number(text);
+        if (
+            Number.isInteger(parsed) &&
+            parsed >= TIME_LIMIT_CUSTOM_MIN &&
+            parsed <= TIME_LIMIT_CUSTOM_MAX
+        ) {
+            setCustomSeconds(parsed);
+            if (draft.timeLimit.kind === 'custom') {
+                onTimeLimitChange({kind: 'custom', seconds: parsed});
+            }
         }
     };
 
@@ -60,6 +93,11 @@ export function TrainerSetup({
     const modeOptions = TRAINING_MODES.map((mode) => ({
         value: mode,
         label: t(MODE_KEYS[mode]),
+    }));
+
+    const timeLimitOptions = TIME_LIMIT_OPTIONS.map((option) => ({
+        value: option,
+        label: t(TIME_LIMIT_KEYS[option]),
     }));
 
     return (
@@ -110,6 +148,32 @@ export function TrainerSetup({
                         options={modeOptions}
                         onChange={onModeChange}
                     />
+                </section>
+
+                <section className={styles.section}>
+                    <h2 className={styles.sectionTitle}>{t('setup.timeLimit')}</h2>
+                    <SegmentedControl
+                        ariaLabel={t('setup.timeLimitAria')}
+                        value={timeLimitToOption(draft.timeLimit)}
+                        options={timeLimitOptions}
+                        onChange={(option) => onTimeLimitChange(timeLimitFromOption(option, customSeconds))}
+                    />
+                    {draft.timeLimit.kind === 'custom' && (
+                        <div className={styles.repetitionRow}>
+                            <TextInput
+                                ariaLabel={t('setup.timeLimitCustomAria')}
+                                inputMode="numeric"
+                                value={customText}
+                                onChange={applyCustomLimit}
+                            />
+                            <span className={styles.rowHint}>
+                {t('setup.timeLimitHint', {
+                    min: TIME_LIMIT_CUSTOM_MIN,
+                    max: TIME_LIMIT_CUSTOM_MAX,
+                })}
+              </span>
+                        </div>
+                    )}
                 </section>
 
                 <section className={styles.section}>
