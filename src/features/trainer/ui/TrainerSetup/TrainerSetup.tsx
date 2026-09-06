@@ -163,6 +163,7 @@ export function TrainerSetup({
                             // Не даём снять последнюю азбуку — всегда остаётся хотя бы одна.
                             onAlphabetsChange(next.length > 0 ? next : draft.alphabets);
                         }}
+                        onDoubleClick={(value) => onAlphabetsChange([value])}
                     />
                 </section>
 

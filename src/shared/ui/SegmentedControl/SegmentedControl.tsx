@@ -12,6 +12,7 @@ interface SegmentedControlProps<T extends string> {
     readonly options: readonly Option<T>[];
     readonly value: T | ReadonlyArray<T>;
     readonly onChange: (value: T) => void;
+    readonly onDoubleClick?: (value: T) => void;
     readonly multiple?: boolean;
     readonly ariaLabel: string;
 }
@@ -26,6 +27,7 @@ export function SegmentedControl<T extends string>({
                                                        onChange,
                                                        multiple = false,
                                                        ariaLabel,
+                                                       onDoubleClick,
                                                    }: SegmentedControlProps<T>): ReactNode {
     const toggled = new Set<T>(Array.isArray(value) ? value : []);
 
@@ -50,6 +52,14 @@ export function SegmentedControl<T extends string>({
                         aria-pressed={active}
                         disabled={option.disabled}
                         onClick={() => selectOption(option.value, option.disabled)}
+                        onDoubleClick={
+                            onDoubleClick
+                                ? (event) => {
+                                    event.preventDefault();
+                                    onDoubleClick(option.value);
+                                }
+                                : undefined
+                        }
                     >
                         {option.label}
                     </button>
