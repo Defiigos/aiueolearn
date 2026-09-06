@@ -121,6 +121,7 @@ const en = {
     'results.avgTime': 'Avg per kana',
     'results.timeout': 'Timeouts',
     'results.review': 'Worth reviewing',
+    'results.mistakeCount': '{count} mistakes on this kana',
     'results.trainAgain': 'Train again',
     'results.toSettings': 'Back to settings',
 
@@ -246,6 +247,7 @@ const ru: Record<MessageKey, string> = {
     'results.avgTime': 'Среднее на знак',
     'results.timeout': 'Тайм-ауты',
     'results.review': 'Стоит повторить',
+    'results.mistakeCount': '{count} ошибок на этом знаке',
     'results.trainAgain': 'Тренироваться ещё',
     'results.toSettings': 'В настройки',
 

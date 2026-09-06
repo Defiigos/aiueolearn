@@ -3,6 +3,7 @@ import {useI18n} from '@/shared/lib/i18n';
 import {Button, Card} from '@/shared/ui';
 import {formatDuration} from '../../model/time';
 import type {QuestionResult} from '../../model/types';
+import {MistakeList} from './MistakeList';
 import styles from './TrainerResults.module.css';
 
 interface TrainerResultsProps {
@@ -60,30 +61,7 @@ export function TrainerResults({
                     </div>
                 </dl>
 
-                {mistakes.length > 0 && (
-                    <div className={styles.mistakes}>
-                        <h3 className={styles.mistakesTitle}>{t('results.review')}</h3>
-                        <ul className={styles.list}>
-                            {mistakes.map((result, index) => (
-                                <li key={index} className={styles.item}>
-                  <span className={styles.prompt}>
-                    {result.question.kind === 'choice'
-                        ? result.question.promptRomaji
-                        : result.question.prompt.symbol}
-                  </span>
-                                    <span className={styles.arrow}>→</span>
-                                    <span className={styles.correct}>
-                    {result.question.kind === 'choice'
-                        ? result.question.correct.symbol
-                        : result.question.kind === 'romaji'
-                            ? result.question.correct
-                            : result.question.prompt.romaji}
-                  </span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
+                <MistakeList mistakes={mistakes}/>
 
                 <div className={styles.actions}>
                     <Button onClick={onRestart}>{t('results.trainAgain')}</Button>
