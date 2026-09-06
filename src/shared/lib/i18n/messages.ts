@@ -26,7 +26,12 @@ const en = {
     // —— Режимы тренажёра ——
     'mode.typing': 'Type the romaji',
     'mode.choice': 'Pick a kana',
+    'mode.romaji': 'Pick the romaji',
     'mode.mixed': 'Mixed',
+
+    // —— Условие завершения тренировки ——
+    'sessionLimit.repetitions': 'By repetitions',
+    'sessionLimit.time': 'By time',
 
     // —— Лимит времени на ответ ——
     'timeLimit.off': 'No limit',
@@ -44,7 +49,6 @@ const en = {
     'setup.alphabet': 'Alphabet',
     'setup.symbols': 'Kana',
     'setup.mode': 'Mode',
-    'setup.repetitions': 'Repetitions',
     'setup.alphabetAria': 'Choose the alphabet',
     'setup.modeAria': 'Choose the training mode',
     'setup.repetitionsAria': 'Number of repetitions',
@@ -53,6 +57,10 @@ const en = {
     'setup.timeLimitAria': 'Choose the answer time limit',
     'setup.timeLimitCustomAria': 'Custom time limit in seconds',
     'setup.timeLimitHint': 'from {min} to {max} sec',
+    'setup.session': 'Session length',
+    'setup.sessionAria': 'Choose how the training ends',
+    'setup.durationAria': 'Training duration in minutes',
+    'setup.durationHint': 'from {min} to {max} min',
     'setup.start': 'Start training',
     'setup.signHint': 'Select at least one kana',
     'setup.resetConfirm': 'Reset all learning progress for every kana?',
@@ -71,6 +79,9 @@ const en = {
     // —— Вопрос «выбери знак» ——
     'choice.aria': 'Kana options',
 
+    // —— Вопрос «выбери ромадзи» ——
+    'romaji.aria': 'Romaji options',
+
     // —— Обратная связь после ответа ——
     'feedback.correct': 'Correct!',
     'feedback.wrong': 'Incorrect',
@@ -87,7 +98,9 @@ const en = {
 
     // —— Ход тренировки ——
     'session.step': 'Step {current} of {total}',
+    'session.answered': '{count} answered',
     'session.timeLeft': 'Time left: {time}',
+    'session.timeTotal': 'Session: {time}',
 
     // —— Таблица выбора знаков ——
     'symbols.all': 'Select all kana',
@@ -151,7 +164,11 @@ const ru: Record<MessageKey, string> = {
 
     'mode.typing': 'Написать ромадзи',
     'mode.choice': 'Выбрать знак',
+    'mode.romaji': 'Выбрать ромадзи',
     'mode.mixed': 'Смешанный',
+
+    'sessionLimit.repetitions': 'По повторениям',
+    'sessionLimit.time': 'По времени',
 
     'timeLimit.off': 'Без лимита',
     'timeLimit.easy': 'Легко · 30 сек',
@@ -166,7 +183,6 @@ const ru: Record<MessageKey, string> = {
     'setup.alphabet': 'Азбука',
     'setup.symbols': 'Знаки',
     'setup.mode': 'Режим',
-    'setup.repetitions': 'Повторения',
     'setup.alphabetAria': 'Выбор азбуки',
     'setup.modeAria': 'Выбор режима тренировки',
     'setup.repetitionsAria': 'Количество повторений',
@@ -175,6 +191,10 @@ const ru: Record<MessageKey, string> = {
     'setup.timeLimitAria': 'Выбор лимита времени на ответ',
     'setup.timeLimitCustomAria': 'Свой лимит времени, в секундах',
     'setup.timeLimitHint': 'от {min} до {max} сек',
+    'setup.session': 'Длительность',
+    'setup.sessionAria': 'Выбор условия завершения тренировки',
+    'setup.durationAria': 'Длительность тренировки, в минутах',
+    'setup.durationHint': 'от {min} до {max} мин',
     'setup.start': 'Начать тренировку',
     'setup.signHint': 'Выберите хотя бы один знак',
     'setup.resetConfirm': 'Сбросить весь прогресс изучения по всем знакам?',
@@ -190,6 +210,8 @@ const ru: Record<MessageKey, string> = {
 
     'choice.aria': 'Варианты знаков',
 
+    'romaji.aria': 'Варианты ромадзи',
+
     'feedback.correct': 'Верно!',
     'feedback.wrong': 'Неверно',
     'feedback.timeout': 'Время вышло',
@@ -203,7 +225,9 @@ const ru: Record<MessageKey, string> = {
     'typing.submit': 'Ответить',
 
     'session.step': 'Шаг {current} из {total}',
+    'session.answered': 'Отвечено: {count}',
     'session.timeLeft': 'Осталось: {time}',
+    'session.timeTotal': 'Сессия: {time}',
 
     'symbols.all': 'Выбрать все знаки',
     'symbols.column': 'Выбрать всю колонку',

@@ -2,9 +2,9 @@ import type {KanaSymbol} from '@/entities/kana';
 import type {MessageKey} from '@/shared/lib/i18n';
 
 /** Режимы упражнения, доступные в тренажёре. */
-export type TrainingMode = 'typing' | 'choice' | 'mixed';
+export type TrainingMode = 'typing' | 'choice' | 'romaji' | 'mixed';
 
-export const TRAINING_MODES: readonly TrainingMode[] = ['typing', 'choice', 'mixed'];
+export const TRAINING_MODES: readonly TrainingMode[] = ['typing', 'choice', 'romaji', 'mixed'];
 
 /**
  * Ключи сообщений интерфейса для подписей режимов тренировки.
@@ -13,6 +13,7 @@ export const TRAINING_MODES: readonly TrainingMode[] = ['typing', 'choice', 'mix
 export const MODE_KEYS: Record<TrainingMode, MessageKey> = {
     typing: 'mode.typing',
     choice: 'mode.choice',
+    romaji: 'mode.romaji',
     mixed: 'mode.mixed',
 } as const;
 
@@ -35,8 +36,51 @@ export interface ChoiceQuestion {
     readonly correct: KanaSymbol;
 }
 
+/** Вопрос «выбрать ромадзи»: показывается знак, на выбор — варианты чтения. */
+export interface RomajiQuestion {
+    readonly kind: 'romaji';
+    readonly id: string;
+    readonly prompt: KanaSymbol;
+    readonly options: readonly string[];
+    readonly correct: string;
+}
+
 /** Любой вопрос тренажёра. */
-export type TrainingQuestion = TypingQuestion | ChoiceQuestion;
+export type TrainingQuestion = TypingQuestion | ChoiceQuestion | RomajiQuestion;
+
+/** Числовые значения по умолчанию для настроек. */
+export const DEFAULT_REPETITIONS = 10;
+export const REPETITION_MIN = 1;
+export const REPETITION_MAX = 50;
+
+/**
+ * Условие завершения тренировки:
+ * «repetitions» — фиксированное число повторений, «time» — работа до истечения времени.
+ */
+export type SessionLimit =
+    | {readonly kind: 'repetitions'; readonly repetitions: number}
+    | {readonly kind: 'time'; readonly seconds: number};
+
+export type SessionLimitKind = SessionLimit['kind'];
+
+export const SESSION_LIMIT_KINDS: readonly SessionLimitKind[] = ['repetitions', 'time'];
+
+/** Ключи i18n для выбора условия завершения тренировки. */
+export const SESSION_LIMIT_KEYS: Record<SessionLimitKind, MessageKey> = {
+    repetitions: 'sessionLimit.repetitions',
+    time: 'sessionLimit.time',
+} as const;
+
+/** Лимит по умолчанию — фиксированное число повторений. */
+export const DEFAULT_SESSION_LIMIT: SessionLimit = {
+    kind: 'repetitions',
+    repetitions: DEFAULT_REPETITIONS,
+};
+
+/** Минуты по умолчанию и границы для режима «по времени». */
+export const DURATION_DEFAULT = 5;
+export const DURATION_MIN = 1;
+export const DURATION_MAX = 60;
 
 /** Результат прохождения одного вопроса. */
 export interface QuestionResult {
@@ -48,11 +92,6 @@ export interface QuestionResult {
     /** Время, потраченное на вопрос, в миллисекундах. */
     readonly durationMs: number;
 }
-
-/** Числовые значения по умолчанию для настроек. */
-export const DEFAULT_REPETITIONS = 10;
-export const REPETITION_MIN = 1;
-export const REPETITION_MAX = 50;
 
 /** Готовые пресеты времени на один вопрос. */
 export type TimeLimitPreset = 'easy' | 'medium' | 'hard';

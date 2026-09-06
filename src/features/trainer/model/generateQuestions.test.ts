@@ -40,16 +40,31 @@ describe('generateQuestions', () => {
         }
     });
 
+    it('для вопроса romaji даёт уникальные варианты и правильный ответ внутри', () => {
+        // Набор содержит омофоны (например, し и ち в одной азбуке читаются одинаково),
+        // поэтому варианты должны быть уникальными строками.
+        const symbols = getKanaBySet('hiragana', 'base').slice(0, 6);
+        const questions = generateQuestions(symbols, 2, 'romaji');
+        for (const q of questions) {
+            if (q.kind !== 'romaji') continue;
+            expect(q.options.length).toBeGreaterThanOrEqual(1);
+            expect(q.options.some((o) => o === q.correct)).toBe(true);
+            expect(new Set(q.options).size).toBe(q.options.length);
+            expect(q.prompt.romaji).toBe(q.correct);
+        }
+    });
+
     it('возвращает пустой список при отсутствии знаков', () => {
         expect(generateQuestions([], 5, 'typing')).toHaveLength(0);
     });
 
-    it('в смешанном режиме генерирует вопросы обоих типов', () => {
+    it('в смешанном режиме генерирует вопросы всех типов', () => {
         const symbols = getKanaBySet('hiragana', 'base').slice(0, 10);
         const questions = generateQuestions(symbols, 5, 'mixed');
         expect(questions).toHaveLength(10 * 5);
         const kinds = new Set(questions.map((q) => q.kind));
         expect(kinds.has('typing')).toBe(true);
         expect(kinds.has('choice')).toBe(true);
+        expect(kinds.has('romaji')).toBe(true);
     });
 });

@@ -6,9 +6,9 @@ import {limitToSeconds} from './time';
 import {
     type AnswerStatus,
     type AnswerTimeLimit,
-    DEFAULT_REPETITIONS,
     DEFAULT_TIME_LIMIT,
     type QuestionResult,
+    type SessionLimit,
     type TrainingMode,
     type TrainingQuestion,
 } from './types';
@@ -19,7 +19,7 @@ export interface TrainerDraft {
     /** Набор знаков, видимого в таблице выбора. */
     readonly set: KanaSet;
     readonly symbolIds: ReadonlySet<string>;
-    readonly repetitions: number;
+    readonly sessionLimit: SessionLimit;
     readonly mode: TrainingMode;
     readonly timeLimit: AnswerTimeLimit;
 }
@@ -50,7 +50,7 @@ export function useTrainerDraft(): {
     readonly setAlphabets: (alphabets: readonly KanaAlphabet[]) => void;
     readonly setSet: (set: KanaSet) => void;
     readonly setMode: (mode: TrainingMode) => void;
-    readonly setRepetitions: (repetitions: number) => void;
+    readonly setSessionLimit: (limit: SessionLimit) => void;
     readonly setTimeLimit: (limit: AnswerTimeLimit) => void;
     readonly toggleSymbol: (id: string) => void;
     /** Отметить/снять все знаки набора для выбранных азбук. */
@@ -69,7 +69,10 @@ export function useTrainerDraft(): {
     const [symbolIds, setSymbolIds] = useState<ReadonlySet<string>>(() => {
         return new Set(getKanaByAlphabetsAndSet(['hiragana'], 'base').map((kana) => kana.id));
     });
-    const [repetitions, setRepetitionsState] = useState<number>(DEFAULT_REPETITIONS);
+    const [sessionLimit, setSessionLimitState] = useState<SessionLimit>({
+        kind: 'repetitions',
+        repetitions: 10,
+    });
     const [mode, setModeState] = useState<TrainingMode>('typing');
     const [timeLimit, setTimeLimitState] = useState<AnswerTimeLimit>(DEFAULT_TIME_LIMIT);
 
@@ -87,7 +90,7 @@ export function useTrainerDraft(): {
     }, []);
 
     const setMode = useCallback((next: TrainingMode) => setModeState(next), []);
-    const setRepetitions = useCallback((next: number) => setRepetitionsState(next), []);
+    const setSessionLimit = useCallback((next: SessionLimit) => setSessionLimitState(next), []);
     const setTimeLimit = useCallback((next: AnswerTimeLimit) => setTimeLimitState(next), []);
 
     const toggleSymbol = useCallback((id: string) => {
@@ -142,7 +145,7 @@ export function useTrainerDraft(): {
         [alphabets, symbolIds],
     );
 
-    const draft: TrainerDraft = {alphabets, set, symbolIds, repetitions, mode, timeLimit};
+    const draft: TrainerDraft = {alphabets, set, symbolIds, sessionLimit, mode, timeLimit};
     const canStart = selectedSymbols.length > 0;
 
     return {
@@ -150,7 +153,7 @@ export function useTrainerDraft(): {
         setAlphabets,
         setSet,
         setMode,
-        setRepetitions,
+        setSessionLimit,
         setTimeLimit,
         toggleSymbol,
         setAllSymbols,
@@ -161,9 +164,22 @@ export function useTrainerDraft(): {
     };
 }
 
+/** Читаемый правильный ответ вопроса в зависимости от его типа. */
+function correctAnswerOf(question: TrainingQuestion): string {
+    switch (question.kind) {
+        case 'typing':
+            return question.prompt.romaji;
+        case 'choice':
+            return question.correct.romaji;
+        case 'romaji':
+            return question.correct;
+    }
+}
+
 export interface TrainingSessionState {
     readonly index: number;
-    readonly total: number;
+    /** Количество вопросов в фиксированном режиме, либо `undefined` в режиме по времени. */
+    readonly total: number | undefined;
     readonly question: TrainingQuestion | undefined;
     readonly answered: boolean;
     readonly results: readonly QuestionResult[];
@@ -171,8 +187,11 @@ export interface TrainingSessionState {
     readonly elapsedMs: number;
     /** Активный лимит времени на вопрос в секундах, либо `undefined`. */
     readonly limitSeconds: number | undefined;
+    /** Остаток времени сессии по времени в миллисекундах, либо `undefined`. */
+    readonly sessionRemainingMs: number | undefined;
     readonly submitTyping: (romaji: string) => void;
     readonly submitChoice: (symbolId: string) => void;
+    readonly submitRomaji: (romaji: string) => void;
     readonly next: () => void;
     readonly restart: () => void;
 }
@@ -180,10 +199,14 @@ export interface TrainingSessionState {
 /**
  * Управляет ходом активной тренировки: текущий вопрос, проверка ответов,
  * лимит времени на ответ, переход к следующему вопросу и перезапуск.
+ *
+ * Условие завершения задаётся `sessionLimit`:
+ * — «repetitions» — конечный список из `repetitions` проходов по выбранным знакам;
+ * — «time» — бесконечная лента вопросов, прерываемая по истечении времени.
  */
 export function useTrainingSession(
     symbols: readonly KanaSymbol[],
-    repetitions: number,
+    sessionLimit: SessionLimit,
     mode: TrainingMode,
     timeLimit: AnswerTimeLimit,
     onFinish: (results: readonly QuestionResult[]) => void,
@@ -191,26 +214,49 @@ export function useTrainingSession(
     const [runId, setRunId] = useState(0);
     const [index, setIndex] = useState(0);
     const [answered, setAnswered] = useState(false);
+    const [passes, setPasses] = useState(1);
     const [results, setResults] = useState<readonly QuestionResult[]>([]);
 
     // Зеркало `answered` для синхронной защиты от двойной записи результата
     // (состояние обновляется асинхронно, а таймер может сработать в том же тике).
     const answeredRef = useRef(false);
+    // Зеркало `results` для чтения из интервала сессионного таймера.
+    const resultsRef = useRef<readonly QuestionResult[]>(results);
     // Момент начала текущего вопроса (для подсчёта времени решения).
     const startMsRef = useRef(0);
     const [elapsedMs, setElapsedMs] = useState(0);
+    // Момент старта сессии и остаток времени (для режима по времени).
+    const sessionStartRef = useRef(0);
+    const [sessionRemainingMs, setSessionRemainingMs] = useState<number | undefined>();
+
+    const isTimed = sessionLimit.kind === 'time';
+    const totalSeconds = sessionLimit.kind === 'time' ? sessionLimit.seconds : undefined;
+    const fixedRepetitions = sessionLimit.kind === 'repetitions' ? sessionLimit.repetitions : 1;
 
     const limitSeconds = limitToSeconds(timeLimit);
 
-    const questions = useMemo(
-        () => generateQuestions(symbols, repetitions, mode),
+    // В фиксированном режиме — один проход из `repetitions` копий набора;
+    // в режиме по времени — бесконечная лента из `passes` проходов по одному.
+    const questions = useMemo<TrainingQuestion[]>(() => {
+        if (sessionLimit.kind === 'time') {
+            const deck: TrainingQuestion[] = [];
+            for (let p = 0; p < passes; p++) {
+                deck.push(...generateQuestions(symbols, 1, mode));
+            }
+            return deck;
+        }
+        return [...generateQuestions(symbols, fixedRepetitions, mode)];
         // runId пересоздаёт список вопросов при перезапуске.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [symbols, repetitions, mode, runId],
-    );
+    }, [symbols, mode, sessionLimit.kind, fixedRepetitions, passes, runId]);
 
     const question = questions[index];
-    const total = questions.length;
+    const total = isTimed ? undefined : questions.length;
+
+    // Держим зеркало `results` актуальным для чтения из сессионного таймера.
+    useEffect(() => {
+        resultsRef.current = results;
+    }, [results]);
 
     // При смене вопроса (или перезапуске) — новый отсчёт времени.
     useEffect(() => {
@@ -218,6 +264,34 @@ export function useTrainingSession(
         setElapsedMs(0);
         answeredRef.current = false;
     }, [index, runId]);
+
+    // Старт отсчёта сессии (режим по времени).
+    useEffect(() => {
+        sessionStartRef.current = performance.now();
+        setSessionRemainingMs(totalSeconds != null ? totalSeconds * 1000 : undefined);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [runId, isTimed]);
+
+    // Сессионный таймер: по истечении времени завершает тренировку.
+    useEffect(() => {
+        if (!isTimed || totalSeconds == null) {
+            return;
+        }
+        const totalMs = totalSeconds * 1000;
+        let finished = false;
+        const timer = window.setInterval(() => {
+            const elapsed = performance.now() - sessionStartRef.current;
+            setSessionRemainingMs(Math.max(0, totalMs - elapsed));
+            if (!finished && elapsed >= totalMs) {
+                finished = true;
+                window.clearInterval(timer);
+                onFinish(resultsRef.current);
+            }
+        }, 200);
+        return () => {
+            window.clearInterval(timer);
+        };
+    }, [isTimed, totalSeconds, onFinish]);
 
     const record = useCallback(
         (status: AnswerStatus, submitted: string, correctAnswer: string): void => {
@@ -257,6 +331,18 @@ export function useTrainingSession(
         [question, record],
     );
 
+    const submitRomaji = useCallback(
+        (romaji: string): void => {
+            if (!question || question.kind !== 'romaji') {
+                return;
+            }
+            const status: AnswerStatus =
+                question.correct === romaji ? 'correct' : 'incorrect';
+            record(status, romaji, question.correct);
+        },
+        [question, record],
+    );
+
     // Тикает счётчик и при достижении лимита автоматически фиксирует тайм-аут.
     useEffect(() => {
         if (!question || answered || limitSeconds == null) {
@@ -267,30 +353,38 @@ export function useTrainingSession(
             const elapsed = performance.now() - startMsRef.current;
             setElapsedMs(Math.max(0, elapsed));
             if (elapsed >= limitMs) {
-                const correctAnswer =
-                    question.kind === 'choice'
-                        ? question.correct.romaji
-                        : question.prompt.romaji;
-                record('timeout', '', correctAnswer);
+                record('timeout', '', correctAnswerOf(question));
             }
         }, 200);
         return () => window.clearInterval(timer);
     }, [question, answered, limitSeconds, record]);
 
     const next = useCallback(() => {
-        if (index + 1 >= total) {
+        if (isTimed) {
+            // Лента в режиме по времени разрастается по мере прохождения.
+            const nextIndex = index + 1;
+            if (nextIndex >= questions.length) {
+                setPasses((current) => current + 1);
+            }
+            answeredRef.current = false;
+            setAnswered(false);
+            setIndex(nextIndex);
+            return;
+        }
+        if (index + 1 >= questions.length) {
             onFinish(results);
             return;
         }
         answeredRef.current = false;
         setAnswered(false);
         setIndex((current) => current + 1);
-    }, [index, total, onFinish, results]);
+    }, [isTimed, index, questions.length, onFinish, results]);
 
     const restart = useCallback(() => {
         answeredRef.current = false;
         setAnswered(false);
         setIndex(0);
+        setPasses(1);
         setResults([]);
         setRunId((current) => current + 1);
     }, []);
@@ -303,8 +397,10 @@ export function useTrainingSession(
         results,
         elapsedMs,
         limitSeconds,
+        sessionRemainingMs,
         submitTyping,
         submitChoice,
+        submitRomaji,
         next,
         restart,
     };

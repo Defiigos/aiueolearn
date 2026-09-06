@@ -1,7 +1,7 @@
 import {useCallback, useState} from 'react';
 import {useLocation, useNavigate} from 'react-router-dom';
 import type {KanaSymbol} from '@/entities/kana';
-import type {AnswerTimeLimit, QuestionResult, TrainingMode} from './types';
+import type {AnswerTimeLimit, QuestionResult, SessionLimit, TrainingMode} from './types';
 
 /** Стадии жизненного цикла страницы тренажёра. */
 export type TrainerStage = 'setup' | 'session' | 'results';
@@ -14,7 +14,7 @@ const ROUTE_RESULTS = '/results';
 /** Состояние активной сессии, закреплённое на момент её старта. */
 export interface ActiveSessionState {
     readonly symbols: readonly KanaSymbol[];
-    readonly repetitions: number;
+    readonly sessionLimit: SessionLimit;
     readonly mode: TrainingMode;
     readonly timeLimit: AnswerTimeLimit;
 }

@@ -12,7 +12,7 @@ export function TrainerPage(): ReactNode {
         setAlphabets,
         setSet,
         setMode,
-        setRepetitions,
+        setSessionLimit,
         setTimeLimit,
         toggleSymbol,
         setAllSymbols,
@@ -35,7 +35,7 @@ export function TrainerPage(): ReactNode {
                     onAlphabetsChange={setAlphabets}
                     onSetChange={setSet}
                     onModeChange={setMode}
-                    onRepetitionsChange={setRepetitions}
+                    onSessionLimitChange={setSessionLimit}
                     onTimeLimitChange={setTimeLimit}
                     onToggleSymbol={toggleSymbol}
                     onSetRow={setRow}
@@ -45,7 +45,7 @@ export function TrainerPage(): ReactNode {
                     onStart={() =>
                         startSession({
                             symbols: selectedSymbols,
-                            repetitions: draft.repetitions,
+                            sessionLimit: draft.sessionLimit,
                             mode: draft.mode,
                             timeLimit: draft.timeLimit,
                         })
@@ -56,7 +56,7 @@ export function TrainerPage(): ReactNode {
             {stage === 'session' && session && (
                 <TrainingSession
                     symbols={session.symbols}
-                    repetitions={session.repetitions}
+                    sessionLimit={session.sessionLimit}
                     mode={session.mode}
                     timeLimit={session.timeLimit}
                     onFinish={finishSession}

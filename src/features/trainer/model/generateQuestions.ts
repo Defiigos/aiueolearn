@@ -1,6 +1,12 @@
 import {randomInt, shuffle} from '@/shared/lib/random';
 import type {KanaSymbol} from '@/entities/kana';
-import type {ChoiceQuestion, TrainingMode, TrainingQuestion, TypingQuestion} from './types';
+import type {
+    ChoiceQuestion,
+    RomajiQuestion,
+    TrainingMode,
+    TrainingQuestion,
+    TypingQuestion,
+} from './types';
 
 const OPTIONS_COUNT = 4;
 
@@ -26,8 +32,28 @@ function createChoiceQuestion(
     };
 }
 
+function createRomajiQuestion(
+    correct: KanaSymbol,
+    pool: readonly KanaSymbol[],
+    index: number,
+): RomajiQuestion {
+    const uniqueRomaji = Array.from(
+        new Set(pool.filter((kana) => kana.id !== correct.id).map((kana) => kana.romaji)),
+    );
+    const distractors = shuffle(uniqueRomaji).slice(0, OPTIONS_COUNT - 1);
+    const options = shuffle([correct.romaji, ...distractors]);
+
+    return {
+        kind: 'romaji',
+        id: `romaji_${index}`,
+        prompt: correct,
+        options,
+        correct: correct.romaji,
+    };
+}
+
 /**
- * Выбирает пул для отвлекающих вариантов режима choice: по возможности весь
+ * Выбирает пул для отвлекающих вариантов режимов выбора: по возможности весь
  * выбранный пользователем набор, иначе сам набор целиком (для правдоподобия).
  */
 function buildChoicePool(symbols: readonly KanaSymbol[]): readonly KanaSymbol[] {
@@ -36,7 +62,11 @@ function buildChoicePool(symbols: readonly KanaSymbol[]): readonly KanaSymbol[] 
 
 /** Для каждого знака решает, вопросам какого типа он будет в смешанном режиме. */
 function pickQuestionKind(): Exclude<TrainingMode, 'mixed'> {
-    return randomInt(0, 1) === 0 ? 'typing' : 'choice';
+    const kind = randomInt(0, 2);
+    if (kind === 0) {
+        return 'typing';
+    }
+    return kind === 1 ? 'choice' : 'romaji';
 }
 
 /**
@@ -45,7 +75,8 @@ function pickQuestionKind(): Exclude<TrainingMode, 'mixed'> {
  *
  * - «typing» — все вопросы на ввод ромадзи;
  * - «choice» — все вопросы на выбор знака;
- * - «mixed» — для каждого знака произвольно выбирается один из двух типов.
+ * - «romaji» — все вопросы на выбор ромадзи по знаку;
+ * - «mixed» — для каждого знака произвольно выбирается один из трёх типов.
  */
 export function generateQuestions(
     symbols: readonly KanaSymbol[],
@@ -68,8 +99,10 @@ export function generateQuestions(
         const kind = mode === 'mixed' ? pickQuestionKind() : mode;
         if (kind === 'typing') {
             questions.push(createTypingQuestion(symbol, index));
-        } else {
+        } else if (kind === 'choice') {
             questions.push(createChoiceQuestion(symbol, buildChoicePool(symbols), index));
+        } else {
+            questions.push(createRomajiQuestion(symbol, buildChoicePool(symbols), index));
         }
     });
 

@@ -75,7 +75,9 @@ export function TrainerResults({
                                     <span className={styles.correct}>
                     {result.question.kind === 'choice'
                         ? result.question.correct.symbol
-                        : result.question.prompt.romaji}
+                        : result.question.kind === 'romaji'
+                            ? result.question.correct
+                            : result.question.prompt.romaji}
                   </span>
                                 </li>
                             ))}

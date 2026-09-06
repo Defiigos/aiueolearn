@@ -5,9 +5,15 @@ import {ALPHABET_KEYS} from '@/entities/kana';
 import {pluralRu, useI18n} from '@/shared/lib/i18n';
 import {Button, Card, SegmentedControl, TextInput} from '@/shared/ui';
 import {
+    DEFAULT_SESSION_LIMIT,
+    DURATION_DEFAULT,
+    DURATION_MAX,
+    DURATION_MIN,
     MODE_KEYS,
     REPETITION_MAX,
     REPETITION_MIN,
+    SESSION_LIMIT_KEYS,
+    SESSION_LIMIT_KINDS,
     TIME_LIMIT_CUSTOM_DEFAULT,
     TIME_LIMIT_CUSTOM_MAX,
     TIME_LIMIT_CUSTOM_MIN,
@@ -17,6 +23,7 @@ import {
     timeLimitFromOption,
     timeLimitToOption,
     type AnswerTimeLimit,
+    type SessionLimit,
 } from '../../model/types';
 import type {TrainerDraft} from '@/features/trainer';
 import {SymbolPicker} from '../SymbolPicker/SymbolPicker';
@@ -29,7 +36,7 @@ interface TrainerSetupProps {
     readonly onAlphabetsChange: (alphabets: readonly KanaAlphabet[]) => void;
     readonly onSetChange: (set: TrainerDraft['set']) => void;
     readonly onModeChange: (mode: TrainerDraft['mode']) => void;
-    readonly onRepetitionsChange: (value: number) => void;
+    readonly onSessionLimitChange: (limit: SessionLimit) => void;
     readonly onTimeLimitChange: (limit: AnswerTimeLimit) => void;
     readonly onToggleSymbol: (id: string) => void;
     readonly onSetRow: (alphabet: KanaAlphabet, row: KanaRow, selected: boolean) => void;
@@ -39,7 +46,7 @@ interface TrainerSetupProps {
     readonly onResetProgress: () => void;
 }
 
-/** Экран подготовки тренировки: настройка азбук, знаков, режима, повторений и лимита времени. */
+/** Экран подготовки тренировки: настройка азбук, знаков, режима, длительности и лимита времени. */
 export function TrainerSetup({
                                  draft,
                                  selectedCount,
@@ -47,7 +54,7 @@ export function TrainerSetup({
                                  onAlphabetsChange,
                                  onSetChange,
                                  onModeChange,
-                                 onRepetitionsChange,
+                                 onSessionLimitChange,
                                  onTimeLimitChange,
                                  onToggleSymbol,
                                  onSetRow,
@@ -58,7 +65,13 @@ export function TrainerSetup({
                              }: TrainerSetupProps): ReactNode {
     const {t} = useI18n();
     // Локальная строка повторений с валидацией на отправку.
-    const [repetitionsText, setRepetitionsText] = useState<string>(String(draft.repetitions));
+    const defaultRepetitions =
+        DEFAULT_SESSION_LIMIT.kind === 'repetitions' ? DEFAULT_SESSION_LIMIT.repetitions : 10;
+    const [repetitionsText, setRepetitionsText] = useState<string>(String(defaultRepetitions));
+    const [repetitions, setRepetitions] = useState<number>(defaultRepetitions);
+    // Длительность сессии по времени: текст поля и последнее корректное значение в минутах.
+    const [durationText, setDurationText] = useState<string>(String(DURATION_DEFAULT));
+    const [durationMinutes, setDurationMinutes] = useState<number>(DURATION_DEFAULT);
     // Пользовательский лимит: текст поля и последнее корректное значение в секундах.
     const [customText, setCustomText] = useState<string>(String(TIME_LIMIT_CUSTOM_DEFAULT));
     const [customSeconds, setCustomSeconds] = useState<number>(TIME_LIMIT_CUSTOM_DEFAULT);
@@ -67,7 +80,21 @@ export function TrainerSetup({
         setRepetitionsText(text);
         const parsed = Number(text);
         if (Number.isInteger(parsed) && parsed >= REPETITION_MIN && parsed <= REPETITION_MAX) {
-            onRepetitionsChange(parsed);
+            setRepetitions(parsed);
+            if (draft.sessionLimit.kind === 'repetitions') {
+                onSessionLimitChange({kind: 'repetitions', repetitions: parsed});
+            }
+        }
+    };
+
+    const applyDuration = (text: string): void => {
+        setDurationText(text);
+        const parsed = Number(text);
+        if (Number.isInteger(parsed) && parsed >= DURATION_MIN && parsed <= DURATION_MAX) {
+            setDurationMinutes(parsed);
+            if (draft.sessionLimit.kind === 'time') {
+                onSessionLimitChange({kind: 'time', seconds: parsed * 60});
+            }
         }
     };
 
@@ -86,6 +113,14 @@ export function TrainerSetup({
         }
     };
 
+    const applySessionKind = (kind: SessionLimit['kind']): void => {
+        if (kind === 'time') {
+            onSessionLimitChange({kind: 'time', seconds: durationMinutes * 60});
+        } else {
+            onSessionLimitChange({kind: 'repetitions', repetitions});
+        }
+    };
+
     const alphabetOptions = (
         ['hiragana', 'katakana'] as const
     ).map((alphabet) => ({value: alphabet, label: t(ALPHABET_KEYS[alphabet])}));
@@ -93,6 +128,11 @@ export function TrainerSetup({
     const modeOptions = TRAINING_MODES.map((mode) => ({
         value: mode,
         label: t(MODE_KEYS[mode]),
+    }));
+
+    const sessionLimitOptions = SESSION_LIMIT_KINDS.map((kind) => ({
+        value: kind,
+        label: t(SESSION_LIMIT_KEYS[kind]),
     }));
 
     const timeLimitOptions = TIME_LIMIT_OPTIONS.map((option) => ({
@@ -177,18 +217,38 @@ export function TrainerSetup({
                 </section>
 
                 <section className={styles.section}>
-                    <h2 className={styles.sectionTitle}>{t('setup.repetitions')}</h2>
-                    <div className={styles.repetitionRow}>
-                        <TextInput
-                            ariaLabel={t('setup.repetitionsAria')}
-                            inputMode="numeric"
-                            value={repetitionsText}
-                            onChange={applyRepetitions}
-                        />
-                        <span className={styles.rowHint}>
-              {t('setup.repetitionsHint', {min: REPETITION_MIN, max: REPETITION_MAX})}
-            </span>
-                    </div>
+                    <h2 className={styles.sectionTitle}>{t('setup.session')}</h2>
+                    <SegmentedControl
+                        ariaLabel={t('setup.sessionAria')}
+                        value={draft.sessionLimit.kind}
+                        options={sessionLimitOptions}
+                        onChange={applySessionKind}
+                    />
+                    {draft.sessionLimit.kind === 'repetitions' ? (
+                        <div className={styles.repetitionRow}>
+                            <TextInput
+                                ariaLabel={t('setup.repetitionsAria')}
+                                inputMode="numeric"
+                                value={repetitionsText}
+                                onChange={applyRepetitions}
+                            />
+                            <span className={styles.rowHint}>
+                {t('setup.repetitionsHint', {min: REPETITION_MIN, max: REPETITION_MAX})}
+              </span>
+                        </div>
+                    ) : (
+                        <div className={styles.repetitionRow}>
+                            <TextInput
+                                ariaLabel={t('setup.durationAria')}
+                                inputMode="numeric"
+                                value={durationText}
+                                onChange={applyDuration}
+                            />
+                            <span className={styles.rowHint}>
+                {t('setup.durationHint', {min: DURATION_MIN, max: DURATION_MAX})}
+              </span>
+                        </div>
+                    )}
                 </section>
             </Card>
 
