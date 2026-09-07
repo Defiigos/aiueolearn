@@ -19,7 +19,8 @@ function createChoiceQuestion(
     pool: readonly KanaSymbol[],
     index: number,
 ): ChoiceQuestion {
-    const candidates = pool.filter((kana) => kana.id !== correct.id);
+    // Омофоны читаются одинаково, исключаем их из отвлекающих вариантов
+    const candidates = pool.filter((kana) => kana.id !== correct.id && kana.romaji !== correct.romaji);
     const distractors = shuffle(candidates).slice(0, OPTIONS_COUNT - 1);
     const options = shuffle([correct, ...distractors]);
 
@@ -37,10 +38,11 @@ function createRomajiQuestion(
     pool: readonly KanaSymbol[],
     index: number,
 ): RomajiQuestion {
+    // Омофоны читаются одинаково, исключаем их из вариантов
     const uniqueRomaji = Array.from(
-        new Set(pool.filter((kana) => kana.id !== correct.id).map((kana) => kana.romaji)),
-    );
-    const distractors = shuffle(uniqueRomaji).slice(0, OPTIONS_COUNT - 1);
+            new Set([correct.romaji, ...pool.map((kana) => kana.romaji)]),
+        );
+        const distractors = shuffle(uniqueRomaji.filter((ro) => ro !== correct.romaji)).slice(0, OPTIONS_COUNT - 1);
     const options = shuffle([correct.romaji, ...distractors]);
 
     return {

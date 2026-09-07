@@ -54,8 +54,31 @@ describe('generateQuestions', () => {
         }
     });
 
+    it('не даёт в choice-вопросе омофон в качестве отвлекающего варианта', () => {
+        // じ и ぢ читаются одинаково («ji»): если оба попадут в варианты, ответ станет неоднозначным.
+        const symbols = (['hiragana', 'katakana'] as const).flatMap((alphabet) => getKanaBySet(alphabet, 'dakuon')).filter((kana) => kana.romaji === 'ji' || kana.romaji === 'zu');
+        const questions = generateQuestions(symbols, 4, 'choice');
+        for (const q of questions) {
+            if (q.kind !== 'choice') continue;
+            // В вариантах встречается ровно один знак с чтением правильного ответа。
+            const sameRomaji = q.options.filter((o) => o.romaji === q.correct.romaji);
+            expect(sameRomaji).toHaveLength(1);
+        }
+    });
+
     it('возвращает пустой список при отсутствии знаков', () => {
         expect(generateQuestions([], 5, 'typing')).toHaveLength(0);
+    });
+
+    it('вопрос romaji не содержит дублей даже при омофонах в пуле', () => {
+        // Пул включает обоих омофонов чтения «ji» (じ и ぢ): вариант должен встречаться один раз.
+        const symbols = (['hiragana', 'katakana'] as const).flatMap((alphabet) => getKanaBySet(alphabet, 'dakuon')).filter((kana) => kana.romaji === 'ji' || kana.romaji === 'zu');
+        const questions = generateQuestions(symbols, 4, 'romaji');
+        for (const q of questions) {
+            if (q.kind !== 'romaji') continue;
+            expect(new Set(q.options).size).toBe(q.options.length);
+            expect(q.options.filter((o) => o === q.correct)).toHaveLength(1);
+        }
     });
 
     it('в смешанном режиме генерирует вопросы всех типов', () => {
