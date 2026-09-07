@@ -52,3 +52,10 @@
     gap: var(--space-md);
     margin-top: var(--space-sm);
 }
+
+@media (max-width: 40rem) {
+    .card {
+        padding: var(--space-md);
+        gap: var(--space-lg);
+    }
+}
