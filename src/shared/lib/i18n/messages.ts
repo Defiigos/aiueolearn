@@ -65,6 +65,10 @@ const en = {
     'setup.signHint': 'Select at least one kana',
     'setup.resetConfirm': 'Reset all learning progress for every kana?',
     'setup.reset': 'Reset progress',
+    'setup.resetSettingsConfirm': 'Reset the training settings to defaults?',
+    'setup.resetSettings': 'Reset settings',
+    'setup.resetTitle': 'Reset?',
+    'common.cancel': 'Cancel',
     'common.chooseKanaSet': 'Choose a set of kana',
 
     // —— Названия азбук ——
@@ -200,6 +204,10 @@ const ru: Record<MessageKey, string> = {
     'setup.signHint': 'Выберите хотя бы один знак',
     'setup.resetConfirm': 'Сбросить весь прогресс изучения по всем знакам?',
     'setup.reset': 'Сбросить прогресс',
+    'setup.resetSettingsConfirm': 'Сбросить настройки тренировки к значениям по умолчанию?',
+    'setup.resetSettings': 'Сбросить настройки',
+    'setup.resetTitle': 'Сбросить?',
+    'common.cancel': 'Отмена',
     'common.chooseKanaSet': 'Выбор набора знаков',
 
     'alphabet.hiragana': 'Хирагана',

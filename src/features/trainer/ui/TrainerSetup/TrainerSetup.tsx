@@ -3,7 +3,7 @@ import {useState} from 'react';
 import type {KanaAlphabet, KanaColumn, KanaRow} from '@/entities/kana';
 import {ALPHABET_KEYS} from '@/entities/kana';
 import {pluralRu, useI18n} from '@/shared/lib/i18n';
-import {Button, Card, SegmentedControl, TextInput} from '@/shared/ui';
+import {Button, Card, ConfirmDialog, SegmentedControl, TextInput} from '@/shared/ui';
 import {
     DEFAULT_SESSION_LIMIT,
     DURATION_DEFAULT,
@@ -44,6 +44,7 @@ interface TrainerSetupProps {
     readonly onSetAll: (alphabet: KanaAlphabet, selected: boolean) => void;
     readonly onStart: () => void;
     readonly onResetProgress: () => void;
+    readonly onResetSettings: () => void;
 }
 
 /** Экран подготовки тренировки: настройка азбук, знаков, режима, длительности и лимита времени. */
@@ -62,19 +63,33 @@ export function TrainerSetup({
                                  onSetAll,
                                  onStart,
                                  onResetProgress,
+                                 onResetSettings,
                              }: TrainerSetupProps): ReactNode {
     const {t} = useI18n();
-    // Локальная строка повторений с валидацией на отправку.
-    const defaultRepetitions =
-        DEFAULT_SESSION_LIMIT.kind === 'repetitions' ? DEFAULT_SESSION_LIMIT.repetitions : 10;
-    const [repetitionsText, setRepetitionsText] = useState<string>(String(defaultRepetitions));
-    const [repetitions, setRepetitions] = useState<number>(defaultRepetitions);
+    // Какое подтверждение открыто: «Сбросить прогресс» или «Сбросить настройки». null — диалог закрыт.
+    const [pendingReset, setPendingReset] = useState<'progress' | 'settings' | null>(null);
+    // Числовые поля инициализируем из восстановленных настроек, чтобы после
+    // перезапуска приложения экран отражал сохранённые значения.
+    const initialRepetitions =
+        draft.sessionLimit.kind === 'repetitions'
+            ? draft.sessionLimit.repetitions
+            : DEFAULT_SESSION_LIMIT.kind === 'repetitions'
+                ? DEFAULT_SESSION_LIMIT.repetitions
+                : 10;
+    const [repetitionsText, setRepetitionsText] = useState<string>(String(initialRepetitions));
+    const [repetitions, setRepetitions] = useState<number>(initialRepetitions);
     // Длительность сессии по времени: текст поля и последнее корректное значение в минутах.
-    const [durationText, setDurationText] = useState<string>(String(DURATION_DEFAULT));
-    const [durationMinutes, setDurationMinutes] = useState<number>(DURATION_DEFAULT);
+    const initialDuration =
+        draft.sessionLimit.kind === 'time'
+            ? Math.round(draft.sessionLimit.seconds / 60)
+            : DURATION_DEFAULT;
+    const [durationText, setDurationText] = useState<string>(String(initialDuration));
+    const [durationMinutes, setDurationMinutes] = useState<number>(initialDuration);
     // Пользовательский лимит: текст поля и последнее корректное значение в секундах.
-    const [customText, setCustomText] = useState<string>(String(TIME_LIMIT_CUSTOM_DEFAULT));
-    const [customSeconds, setCustomSeconds] = useState<number>(TIME_LIMIT_CUSTOM_DEFAULT);
+    const initialCustom =
+        draft.timeLimit.kind === 'custom' ? draft.timeLimit.seconds : TIME_LIMIT_CUSTOM_DEFAULT;
+    const [customText, setCustomText] = useState<string>(String(initialCustom));
+    const [customSeconds, setCustomSeconds] = useState<number>(initialCustom);
 
     const applyRepetitions = (text: string): void => {
         setRepetitionsText(text);
@@ -112,6 +127,10 @@ export function TrainerSetup({
             }
         }
     };
+
+    // Значения по умолчанию для числовых полей (совпадают с дефолтным черновиком).
+    const resetDefaultsRepetitions =
+        DEFAULT_SESSION_LIMIT.kind === 'repetitions' ? DEFAULT_SESSION_LIMIT.repetitions : 10;
 
     const applySessionKind = (kind: SessionLimit['kind']): void => {
         if (kind === 'time') {
@@ -270,15 +289,46 @@ export function TrainerSetup({
                 <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                        if (window.confirm(t('setup.resetConfirm'))) {
-                            onResetProgress();
-                        }
-                    }}
+                    onClick={() => setPendingReset('progress')}
                 >
                     {t('setup.reset')}
                 </Button>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setPendingReset('settings')}
+                >
+                    {t('setup.resetSettings')}
+                </Button>
             </footer>
+            {pendingReset !== null && (
+                <ConfirmDialog
+                    title={t('setup.resetTitle')}
+                    message={pendingReset === 'progress'
+                        ? t('setup.resetConfirm')
+                        : t('setup.resetSettingsConfirm')}
+                    confirmLabel={pendingReset === 'progress'
+                        ? t('setup.reset')
+                        : t('setup.resetSettings')}
+                    cancelLabel={t('common.cancel')}
+                    onConfirm={() => {
+                        if (pendingReset === 'progress') {
+                            onResetProgress();
+                        } else if (pendingReset === 'settings') {
+                            // Синхронизируем локальные поля ввода с дефолтным черновиком.
+                            setRepetitionsText(String(resetDefaultsRepetitions));
+                            setRepetitions(resetDefaultsRepetitions);
+                            setDurationText(String(DURATION_DEFAULT));
+                            setDurationMinutes(DURATION_DEFAULT);
+                            setCustomText(String(TIME_LIMIT_CUSTOM_DEFAULT));
+                            setCustomSeconds(TIME_LIMIT_CUSTOM_DEFAULT);
+                            onResetSettings();
+                        }
+                        setPendingReset(null);
+                    }}
+                    onCancel={() => setPendingReset(null)}
+                />
+            )}
         </form>
     );
 }

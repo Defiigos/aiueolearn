@@ -2,7 +2,7 @@ import {cx} from '@/shared/lib/cx';
 import type {ReactNode} from 'react';
 import styles from './Button.module.css';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps {

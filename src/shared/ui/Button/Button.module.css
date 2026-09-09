@@ -56,6 +56,15 @@
     }
 }
 
+.danger {
+    background-color: var(--color-danger);
+    color: var(--color-primary-fg);
+
+    &:hover {
+        background-color: var(--color-danger-hover);
+    }
+}
+
 .disabled,
 .button:disabled {
     opacity: 0.5;

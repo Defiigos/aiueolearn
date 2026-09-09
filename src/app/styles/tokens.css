@@ -29,6 +29,7 @@
     --color-success: #16a34a;
     --color-success-soft: #e7f6ec;
     --color-danger: #dc2626;
+    --color-danger-hover: #b91c1c;
     --color-danger-soft: #fdeaea;
     --color-accent: #d13ea8;
 
@@ -97,6 +98,7 @@
     --color-success: #34d076;
     --color-success-soft: #1c2f26;
     --color-danger: #f0625c;
+    --color-danger-hover: #ff8a80;
     --color-danger-soft: #392023;
     --color-accent: #ec6fc2;
 

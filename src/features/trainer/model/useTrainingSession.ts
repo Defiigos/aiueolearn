@@ -4,8 +4,15 @@ import {getAllKanaByAlphabets, getKanaByAlphabetsAndSet, getKanaBySet,} from '@/
 import {generateQuestions} from './generateQuestions';
 import {limitToSeconds} from './time';
 import {
+    clearTrainerSettings,
+    loadTrainerSettings,
+    saveTrainerSettings,
+    type TrainerSettings,
+} from './trainerSettingsStorage';
+import {
     type AnswerStatus,
     type AnswerTimeLimit,
+    DEFAULT_SESSION_LIMIT,
     DEFAULT_TIME_LIMIT,
     type QuestionResult,
     type SessionLimit,
@@ -52,6 +59,8 @@ export function useTrainerDraft(): {
     readonly setMode: (mode: TrainingMode) => void;
     readonly setSessionLimit: (limit: SessionLimit) => void;
     readonly setTimeLimit: (limit: AnswerTimeLimit) => void;
+    /** Вернуть настройки экрана подготовки к значениям по умолчанию. */
+    readonly resetSettings: () => void;
     readonly toggleSymbol: (id: string) => void;
     /** Отметить/снять все знаки набора для выбранных азбук. */
     readonly setAllSymbols: (alphabet: KanaAlphabet, selected: boolean) => void;
@@ -62,19 +71,30 @@ export function useTrainerDraft(): {
     readonly selectedSymbols: readonly KanaSymbol[];
     readonly canStart: boolean;
 } {
-    const [alphabets, setAlphabetsState] = useState<readonly KanaAlphabet[]>([
-        'hiragana',
-    ]);
-    const [set, setSetState] = useState<KanaSet>('base');
+    // Загружаем сохранённые настройки только при первом рендере
+    const storedSettingsRef = useRef<TrainerSettings | undefined>(undefined);
+    if (storedSettingsRef.current === undefined) {
+        storedSettingsRef.current = loadTrainerSettings();
+    }
+    const stored = storedSettingsRef.current;
+
+    const [alphabets, setAlphabetsState] = useState<readonly KanaAlphabet[]>(
+        stored ? stored.alphabets : ['hiragana'],
+    );
+    const [set, setSetState] = useState<KanaSet>(stored ? stored.set : 'base');
     const [symbolIds, setSymbolIds] = useState<ReadonlySet<string>>(() => {
+        if (stored) {
+            return new Set(stored.symbolIds);
+        }
         return new Set(getKanaByAlphabetsAndSet(['hiragana'], 'base').map((kana) => kana.id));
     });
-    const [sessionLimit, setSessionLimitState] = useState<SessionLimit>({
-        kind: 'repetitions',
-        repetitions: 10,
-    });
-    const [mode, setModeState] = useState<TrainingMode>('typing');
-    const [timeLimit, setTimeLimitState] = useState<AnswerTimeLimit>(DEFAULT_TIME_LIMIT);
+    const [sessionLimit, setSessionLimitState] = useState<SessionLimit>(
+        stored ? stored.sessionLimit : DEFAULT_SESSION_LIMIT,
+    );
+    const [mode, setModeState] = useState<TrainingMode>(stored ? stored.mode : 'typing');
+    const [timeLimit, setTimeLimitState] = useState<AnswerTimeLimit>(
+        stored ? stored.timeLimit : DEFAULT_TIME_LIMIT,
+    );
 
     // При смене азбуки по умолчанию отмечаем весь видимый набор новой комбинации.
     const setAlphabets = useCallback(
@@ -92,6 +112,29 @@ export function useTrainerDraft(): {
     const setMode = useCallback((next: TrainingMode) => setModeState(next), []);
     const setSessionLimit = useCallback((next: SessionLimit) => setSessionLimitState(next), []);
     const setTimeLimit = useCallback((next: AnswerTimeLimit) => setTimeLimitState(next), []);
+
+    // Сохраняем настройки при каждом их изменении
+    useEffect(() => {
+        saveTrainerSettings({
+            alphabets,
+            set,
+            symbolIds: [...symbolIds],
+            sessionLimit,
+            mode,
+            timeLimit,
+        });
+    }, [alphabets, set, symbolIds, sessionLimit, mode, timeLimit]);
+
+    const resetSettings = useCallback(() => {
+        setAlphabetsState(['hiragana']);
+        setSetState('base');
+        setSymbolIds(new Set(getKanaByAlphabetsAndSet(['hiragana'], 'base').map((kana) => kana.id)));
+        setSessionLimitState(DEFAULT_SESSION_LIMIT);
+        setModeState('typing');
+        setTimeLimitState(DEFAULT_TIME_LIMIT);
+        // Следующий useEffect запишет значения по умолчанию в хранилище.
+        clearTrainerSettings();
+    }, []);
 
     const toggleSymbol = useCallback((id: string) => {
         setSymbolIds((current) => {
@@ -155,6 +198,7 @@ export function useTrainerDraft(): {
         setMode,
         setSessionLimit,
         setTimeLimit,
+        resetSettings,
         toggleSymbol,
         setAllSymbols,
         setRow,

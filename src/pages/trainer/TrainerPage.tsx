@@ -14,6 +14,7 @@ export function TrainerPage(): ReactNode {
         setMode,
         setSessionLimit,
         setTimeLimit,
+        resetSettings,
         toggleSymbol,
         setAllSymbols,
         setRow,
@@ -42,6 +43,7 @@ export function TrainerPage(): ReactNode {
                     onSetColumn={setColumn}
                     onSetAll={setAllSymbols}
                     onResetProgress={resetProgress}
+                    onResetSettings={resetSettings}
                     onStart={() =>
                         startSession({
                             symbols: selectedSymbols,

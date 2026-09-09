@@ -1,0 +1,98 @@
+.backdrop {
+    position: fixed;
+    inset: 0;
+    background: var(--color-overlay);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: backdrop-in 100ms ease-out;
+}
+
+.backdropClosing {
+    animation: backdrop-out 100ms ease-in forwards;
+}
+
+.dialog {
+    background: var(--color-bg-elevated);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-lg);
+    max-width: 26rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    outline: none;
+    animation: dialog-in 100ms ease-out;
+}
+
+.dialogClosing {
+    animation: dialog-out 100ms ease-in forwards;
+}
+
+@keyframes backdrop-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes backdrop-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes dialog-in {
+    from {
+        opacity: 0;
+        transform: scale(0.94);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes dialog-out {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.94);
+    }
+}
+
+/* При отключённой анимации в ОС окно просто мгновенно появляется/исчезает. */
+@media (prefers-reduced-motion: reduce) {
+    .backdrop,
+    .dialog {
+        animation: none;
+    }
+}
+
+.title {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-fg);
+}
+
+.message {
+    margin: 0;
+    font-size: var(--font-size-md);
+    color: var(--color-fg);
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-sm);
+}
