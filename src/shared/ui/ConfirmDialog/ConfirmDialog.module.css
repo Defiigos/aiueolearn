@@ -5,11 +5,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: backdrop-in 100ms ease-out;
+    animation: backdrop-in 110ms ease-out;
 }
 
 .backdropClosing {
-    animation: backdrop-out 100ms ease-in forwards;
+    animation: backdrop-out 110ms ease-in forwards;
 }
 
 .dialog {
@@ -23,11 +23,11 @@
     flex-direction: column;
     gap: var(--space-md);
     outline: none;
-    animation: dialog-in 100ms ease-out;
+    animation: dialog-in 110ms ease-out;
 }
 
 .dialogClosing {
-    animation: dialog-out 100ms ease-in forwards;
+    animation: dialog-out 110ms ease-in forwards;
 }
 
 @keyframes backdrop-in {
@@ -95,4 +95,10 @@
     display: flex;
     justify-content: flex-end;
     gap: var(--space-sm);
+}
+
+@media (max-width: 40rem) {
+    .dialog {
+        margin: var(--space-sm);
+    }
 }
