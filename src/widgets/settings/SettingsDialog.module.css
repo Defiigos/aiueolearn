@@ -5,14 +5,29 @@
     color: var(--color-fg);
 }
 
-.message {
-    margin: 0;
+.row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.label {
     font-size: var(--font-size-md);
     color: var(--color-fg);
+    white-space: nowrap;
 }
 
 .actions {
     display: flex;
     justify-content: flex-end;
     gap: var(--space-sm);
+}
+
+@media (max-width: 40rem) {
+    .row {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: center;
+        gap: var(--space-sm);
+    }
 }

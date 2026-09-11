@@ -23,6 +23,17 @@ const en = {
     // —— Переключатель языка ——
     'lang.switch': 'Switch language',
 
+    // —— Настройки ——
+    'settings.aria': 'Open settings',
+    'settings.title': 'Settings',
+    'settings.close': 'Close',
+
+    // —— Переключатель звука ——
+    'sound.toMute': 'Mute sound',
+    'sound.toUnmute': 'Turn the sound on',
+    'sound.currentOn': 'Sound on',
+    'sound.currentOff': 'Sound off',
+
     // —— Режимы тренажёра ——
     'mode.typing': 'Type the romaji',
     'mode.choice': 'Pick a kana',
@@ -166,6 +177,15 @@ const ru: Record<MessageKey, string> = {
     'theme.currentDark': 'Тёмная тема',
 
     'lang.switch': 'Переключить язык',
+
+    'settings.aria': 'Открыть настройки',
+    'settings.title': 'Настройки',
+    'settings.close': 'Закрыть',
+
+    'sound.toMute': 'Выключить звук',
+    'sound.toUnmute': 'Включить звук',
+    'sound.currentOn': 'Звук включён',
+    'sound.currentOff': 'Звук выключен',
 
     'mode.typing': 'Написать ромадзи',
     'mode.choice': 'Выбрать знак',

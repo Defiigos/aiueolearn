@@ -1,7 +1,7 @@
 import type {ReactNode} from 'react';
 import {useI18n} from '@/shared/lib/i18n';
 import {useTheme} from '@/features/theme';
-import styles from './ThemeToggle.module.css';
+import styles from '@/shared/ui/Button/Button.module.css';
 
 /** Кнопка переключения светлой/тёмной темы приложения. */
 export function ThemeToggle(): ReactNode {

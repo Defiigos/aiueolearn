@@ -1,8 +1,9 @@
 import type {ReactNode} from 'react';
-import {useMemo} from 'react';
+import {useEffect, useMemo} from 'react';
 import type {KanaSymbol} from '@/entities/kana';
 import {findKanaById} from '@/entities/kana';
 import {useI18n} from '@/shared/lib/i18n';
+import {useSound} from '@/shared/lib/sound';
 import {cx} from '@/shared/lib/cx';
 import {Card, ProgressBar} from '@/shared/ui';
 import {useTrainingSession} from '@/features/trainer';
@@ -74,10 +75,30 @@ export function TrainingSession({
         next,
     } = useTrainingSession(symbols, sessionLimit, mode, timeLimit, onFinish);
     const {t} = useI18n();
+    const {playClick, playCorrect, playIncorrect, speakKana} = useSound();
 
     const lastResult = results[results.length - 1];
     const isTimed = sessionLimit.kind === 'time';
     const isLast = !isTimed && index + 1 >= (total ?? 0);
+
+    // Озвучиваем знак при появлении вопроса «выбери знак» (обучающее произношение).
+    useEffect(() => {
+        if (question?.kind === 'choice' && !answered) {
+            speakKana(question.correct.symbol);
+        }
+    }, [question, answered, speakKana]);
+
+    // Звуковой отклик на исход последнего ответа (правильно/неверно/тайм-аут).
+    useEffect(() => {
+        if (!lastResult) {
+            return;
+        }
+        if (lastResult.status === 'correct') {
+            playCorrect();
+        } else {
+            playIncorrect();
+        }
+    }, [lastResult, playCorrect, playIncorrect]);
 
     const remainingSeconds = limitSeconds == null
         ? undefined
@@ -145,6 +166,7 @@ export function TrainingSession({
                             <TypingQuestion
                                 symbol={question.prompt.symbol}
                                 onSubmit={(romaji) => {
+                                    playClick();
                                     submitTyping(romaji);
                                     onAnswer?.(question.prompt.id, question.prompt.romaji === romaji);
                                 }}
@@ -155,6 +177,11 @@ export function TrainingSession({
                                 romaji={question.promptRomaji}
                                 options={question.options}
                                 onSubmit={(symbolId) => {
+                                    playClick();
+                                    const selected = question.options.find((option) => option.id === symbolId);
+                                    if (selected) {
+                                        speakKana(selected.symbol);
+                                    }
                                     submitChoice(symbolId);
                                     onAnswer?.(question.correct.id, question.correct.id === symbolId);
                                 }}
@@ -165,6 +192,7 @@ export function TrainingSession({
                                 symbol={question.prompt}
                                 options={question.options}
                                 onSubmit={(romaji) => {
+                                    playClick();
                                     submitRomaji(romaji);
                                     onAnswer?.(question.prompt.id, question.correct === romaji);
                                 }}

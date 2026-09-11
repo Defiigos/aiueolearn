@@ -2,13 +2,17 @@ import type {ReactNode} from 'react';
 import {NavLink, Outlet} from 'react-router-dom';
 import {LanguageToggle} from '@/features/i18n';
 import {ThemeToggle} from '@/features/theme';
+import {SoundToggle} from '@/features/sound';
 import {useI18n} from '@/shared/lib/i18n';
+import {useIsMobile} from '@/shared/lib/viewport';
 import {cx} from '@/shared/lib/cx';
+import {SettingsButton} from '@/widgets';
 import styles from './AppLayout.module.css';
 
-/** Шапка приложения: логотип, навигация и переключатели темы и языка. */
+/** Шапка приложения: логотип, навигация и переключатели темы, языка и звука. */
 export function AppHeader(): ReactNode {
     const {t} = useI18n();
+    const isMobile = useIsMobile();
 
     const navLinks = [
         {to: '/', label: t('nav.trainer')},
@@ -34,8 +38,15 @@ export function AppHeader(): ReactNode {
                         </NavLink>
                     ))}
                 </nav>
-                <LanguageToggle/>
-                <ThemeToggle/>
+                {isMobile ? (
+                    <SettingsButton/>
+                ) : (
+                    <div className={styles.settings}>
+                        <SoundToggle/>
+                        <ThemeToggle/>
+                        <LanguageToggle/>
+                    </div>
+                )}
             </div>
         </header>
     );

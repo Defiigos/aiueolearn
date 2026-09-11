@@ -59,6 +59,12 @@
     }
 }
 
+.settings {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-xs);
+}
+
 .active {
     background: var(--color-primary-soft);
     color: var(--color-primary);

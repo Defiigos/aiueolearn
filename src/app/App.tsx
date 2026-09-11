@@ -1,6 +1,7 @@
 import type {ReactNode} from 'react';
 import {createBrowserRouter, Navigate, RouterProvider} from 'react-router-dom';
 import {I18nProvider} from '@/shared/lib/i18n';
+import {SoundProvider} from '@/shared/lib/sound';
 import {ThemeProvider} from '@/features/theme';
 import {ProgressProvider} from '@/entities/progress';
 import {AppLayout} from '@/widgets';
@@ -26,9 +27,11 @@ export function App(): ReactNode {
     return (
         <I18nProvider>
             <ThemeProvider>
-                <ProgressProvider>
-                    <RouterProvider router={router}/>
-                </ProgressProvider>
+                <SoundProvider>
+                    <ProgressProvider>
+                        <RouterProvider router={router}/>
+                    </ProgressProvider>
+                </SoundProvider>
             </ThemeProvider>
         </I18nProvider>
     );
