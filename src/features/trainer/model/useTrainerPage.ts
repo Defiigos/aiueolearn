@@ -1,4 +1,4 @@
-import {useCallback, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {useLocation, useNavigate} from 'react-router-dom';
 import type {KanaSymbol} from '@/entities/kana';
 import type {AnswerTimeLimit, QuestionResult, SessionLimit, TrainingMode} from './types';
@@ -42,6 +42,17 @@ export function useTrainerPage(): {
         pathname === ROUTE_SESSION ? 'session'
         : pathname === ROUTE_RESULTS ? 'results'
         : 'setup';
+
+    // Если нет сессии тренировки или результата, то редиректить в корень
+    const needsSetupRedirect =
+        (stage === 'session' && session === undefined) ||
+        (stage === 'results' && results.length === 0);
+
+    useEffect(() => {
+        if (needsSetupRedirect) {
+            navigate(ROUTE_SETUP);
+        }
+    }, [needsSetupRedirect, navigate]);
 
     const startSession = useCallback((next: ActiveSessionState) => {
         setSession(next);
