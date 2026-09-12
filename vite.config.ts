@@ -14,7 +14,6 @@ export default defineConfig({
               name: 'aiueoLearn',
               short_name: 'aiueo',
               description: 'App about learning Japanese kana',
-              start_url: '/',
               theme_color: '#7c75f3',
               background_color: '#1e2028',
               display: 'standalone',
