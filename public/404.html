@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AIUEO Learn</title>
+    <script>
+      // GitHub Pages отдаёт 404.html для неизвестных путей вместо перезаписи.
+      // Перенаправляем на корень SPA, чтобы глубокие ссылки (/session, /results, ...)
+      // после обновления страницы корректно попадали в роутер (basename=...).
+      window.location.replace('/aiueolearn/');
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <style>html, body { margin: 0; background: #1e2028; color: #e6e6e6; display: grid; place-items: center; height: 100vh; }
+      a { color: #7c75f3; }</style>
+      <p><a href="/aiueolearn/">AIUEO Learn — перейти к приложению</a></p>
+    </noscript>
+  </body>
+</html>

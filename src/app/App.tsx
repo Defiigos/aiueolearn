@@ -8,6 +8,10 @@ import {AppLayout} from '@/widgets';
 import {ReferencePage} from '@/pages/reference/ReferencePage';
 import {TrainerPage} from '@/pages/trainer/TrainerPage';
 
+// Базовый путь деплоя на GitHub Pages (проектная страница под /aiueolearn/).
+// Должен совпадать с `base` в vite.config.ts и именем репозитория.
+const BASE_PATH = '/aiueolearn';
+
 const router = createBrowserRouter([
     {
         path: '/',
@@ -20,7 +24,7 @@ const router = createBrowserRouter([
             {path: '*', element: <Navigate to="/" replace/>},
         ],
     },
-]);
+], {basename: BASE_PATH});
 
 /** Корневой компонент приложения с провайдерами и маршрутизацией. */
 export function App(): ReactNode {
